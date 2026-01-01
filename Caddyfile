@@ -1,23 +1,24 @@
-# Replace with your own domain
-myvnc.my-domain.com {
+yourdomain.com {
+    # Caddy otomatik HTTPS alır
     tls youremail@example.com
 
-    encode zstd gzip
+    # Önbellek HTTP → HTTPS
+    encode gzip zstd
 
-    # serve static login page
+    # Static site: parola + novnc UI
     root * /usr/share/novnc/custom
     file_server
 
-    # forward WebSockets for noVNC
-    @vnc_websock path /websockify*
-    reverse_proxy @vnc_websock localhost:5901 {
+    # WebSocket /Websockify proxy (noVNC)
+    @vnc path /websockify*
+    reverse_proxy @vnc localhost:5901 {
         transport http {
             versions h2c 1.1
         }
     }
 
-    # Forward everything else to static files and noVNC UI
-    handle {
+    # noVNC UI fallback
+    route {
         try_files {path} /vnc.html
         file_server
     }
