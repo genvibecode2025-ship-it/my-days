@@ -1,68 +1,55 @@
-##############################################
-# Base Image: Use official Caddy image
-##############################################
-FROM caddy:2 AS base
+# Base image
+FROM --platform=linux/amd64 ubuntu:22.04
 
-##############################################
-# Switch to root (Caddy runs as root, ok)
-##############################################
-USER root
+ENV DEBIAN_FRONTEND=noninteractive
 
-##############################################
-# Install packages (XFCE, VNC, noVNC, etc.)
-##############################################
+##########################################
+# 1) Masaüstü + VNC + noVNC + Firefox
+##########################################
 RUN apt update -y && \
     apt install --no-install-recommends -y \
         xfce4 xfce4-goodies \
         tigervnc-standalone-server \
-        x11vnc \
-        websockify \
+        novnc websockify \
         sudo xterm \
         dbus-x11 x11-utils x11-xserver-utils x11-apps \
-        chromium-browser \
-        wget curl vim net-tools tzdata && \
+        vim net-tools curl wget git tzdata && \
     apt clean
 
-##############################################
-# Create normal user
-##############################################
-RUN useradd -m -s /bin/bash user && \
-    echo "user:StrongPass2026!" | chpasswd && \
-    usermod -aG sudo user
+# Firefox (Ubuntu resmi deposundan)
+RUN apt update -y && apt install -y firefox && apt clean
 
-##############################################
-# Set VNC password
-##############################################
-RUN mkdir -p /home/user/.vnc && \
-    x11vnc -storepasswd VNCpass123! /home/user/.vnc/passwd && \
-    chmod 600 /home/user/.vnc/passwd && \
-    chown -R user:user /home/user/.vnc
+##########################################
+# 2) Root parolası
+##########################################
+RUN echo "root:RootPass123!" | chpasswd
 
-##############################################
-# Touch .Xauthority
-##############################################
-RUN touch /home/user/.Xauthority && chown user:user /home/user/.Xauthority
+##########################################
+# 3) Xauthority
+##########################################
+RUN touch /root/.Xauthority
 
-##############################################
-# Copy login page
-##############################################
-COPY index.html /usr/share/novnc/custom/index.html
+##########################################
+# 4) Portlar
+##########################################
+# VNC port
+EXPOSE 5901
+# noVNC/websockify (Render bu PORT'u $PORT olarak ayarlar)
+EXPOSE 6080
 
-##############################################
-# Copy Caddy config
-##############################################
-COPY Caddyfile /etc/caddy/Caddyfile
-
-##############################################
-# Expose needed ports
-##############################################
-EXPOSE 80
-EXPOSE 443
-
-##############################################
-# Start VNC + Caddy
-##############################################
+##########################################
+# 5) Start komutu
+##########################################
 CMD bash -c "\
-    rm -f /tmp/.X?-lock /tmp/.X11-unix/X? && \
-    sudo -u user vncserver :1 -geometry 1366x768 -SecurityTypes VncAuth && sleep 5 && \
-    caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
+    mkdir -p /root/.vnc && \
+    # VNC server aç
+    vncserver :1 -geometry 1280x800 -SecurityTypes None --I-KNOW-THIS-IS-INSECURE && \
+    \
+    # Self-signed sertifika oluştur
+    openssl req -new -subj \"/C=US/ST=Denial/L=Nowhere/O=Dis/CN=localhost\" -x509 -days 365 -nodes -out /tmp/self.pem -keyout /tmp/self.pem && \
+    \
+    # noVNC / websockify
+    websockify --web=/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901 & \
+    \
+    # keep alive
+    tail -f /dev/null"
