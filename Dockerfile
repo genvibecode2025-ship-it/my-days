@@ -1,10 +1,10 @@
-# Base image
+# Ubuntu tabanlı imaj
 FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 ##########################################
-# 1) Masaüstü + VNC + noVNC + Firefox
+# 1) Temel Paketler
 ##########################################
 RUN apt update -y && \
     apt install --no-install-recommends -y \
@@ -13,43 +13,59 @@ RUN apt update -y && \
         novnc websockify \
         sudo xterm \
         dbus-x11 x11-utils x11-xserver-utils x11-apps \
-        vim net-tools curl wget git tzdata && \
+        wget curl vim net-tools git tzdata && \
     apt clean
 
-# Firefox (Ubuntu resmi deposundan)
-RUN apt update -y && apt install -y firefox && apt clean
+##########################################
+# 2) Kullanıcı Oluşturma
+##########################################
+RUN useradd -m -s /bin/bash user && \
+    echo "user:StrongPass2026!" | chpasswd && \
+    usermod -aG sudo user
 
 ##########################################
-# 2) Root parolası
+# 3) VNC Parola Ayarı
 ##########################################
-RUN echo "root:RootPass123!" | chpasswd
+RUN mkdir -p /home/user/.vnc && \
+    echo "VNCpass123!" | vncpasswd -f > /home/user/.vnc/passwd && \
+    chmod 600 /home/user/.vnc/passwd && \
+    chown -R user:user /home/user/.vnc
 
 ##########################################
-# 3) Xauthority
+# 4) Chromium Tarayıcı
 ##########################################
-RUN touch /root/.Xauthority
+RUN apt update -y && \
+    apt install -y chromium-browser && \
+    apt clean
 
 ##########################################
-# 4) Portlar
+# 5) .Xauthority
 ##########################################
-# VNC port
+RUN touch /home/user/.Xauthority && \
+    chown user:user /home/user/.Xauthority
+
+##########################################
+# 6) Portlar
+##########################################
+# VNC port (iç bağlantı için)
 EXPOSE 5901
-# noVNC/websockify (Render bu PORT'u $PORT olarak ayarlar)
+# noVNC / web port
 EXPOSE 6080
 
 ##########################################
-# 5) Start komutu
+# 7) Startup Script
 ##########################################
 CMD bash -c "\
-    mkdir -p /root/.vnc && \
-    # VNC server aç
-    vncserver :1 -geometry 1280x800 -SecurityTypes None --I-KNOW-THIS-IS-INSECURE && \
+    mkdir -p /home/user/.vnc && \
+    chown user:user /home/user/.vnc && \
     \
-    # Self-signed sertifika oluştur
-    openssl req -new -subj \"/C=US/ST=Denial/L=Nowhere/O=Dis/CN=localhost\" -x509 -days 365 -nodes -out /tmp/self.pem -keyout /tmp/self.pem && \
+    # VNC sunucusunu başlat
+    sudo -u user vncserver :1 -geometry 1280x800 -SecurityTypes VncAuth && \
     \
-    # noVNC / websockify
+    # Self-signed sertifika
+    openssl req -new -subj \"/C=US/ST=State/L=City/O=Org/CN=localhost\" -x509 -days 365 -nodes -out /tmp/self.pem -keyout /tmp/self.pem && \
+    \
+    # noVNC websockify (Render $PORT ile)
     websockify --web=/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901 & \
     \
-    # keep alive
     tail -f /dev/null"
