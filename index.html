@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>Güvenli Giriş</title>
   <style>
-    body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; background-color: #f0f0f0; }
-    .box { text-align: center; padding: 30px; border: 1px solid #ccc; background: #fff; border-radius: 8px; width: 280px; }
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; background: #f7f7f7; }
+    .box { text-align: center; padding: 30px; border: 1px solid #ccc; background: white; border-radius: 8px; width: 280px; }
     input { padding: 8px; width: 100%; margin: 10px 0; }
     button { padding: 8px 16px; cursor: pointer; }
   </style>
@@ -18,7 +18,7 @@
     <button onclick="check()">Bağlan</button>
   </div>
   <script>
-    const secret = "DockerEntry123!"; // bunu güçlü yap
+    const secret = "DockerEntry123!";
     function check() {
       if (document.getElementById("pw").value === secret) {
         window.location.href = "/vnc.html?autoconnect=true&clipboard=true";
