@@ -1,31 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Güvenli Giriş</title>
-  <style>
-    body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; background: #f7f7f7; }
-    .box { text-align: center; padding: 30px; border: 1px solid #ccc; background: white; border-radius: 8px; width: 280px; }
-    input { padding: 8px; width: 100%; margin: 10px 0; }
-    button { padding: 8px 16px; cursor: pointer; }
-  </style>
-</head>
+<head><meta charset="UTF-8"><title>Giriş</title></head>
+<style>
+ body { font-family: Arial; text-align:center; padding-top:50px; }
+ input { padding:8px; width:250px; margin-top:10px; }
+ button { padding:8px 16px; }
+</style>
 <body>
-  <div class="box">
-    <h2>Giriş Parolası</h2>
-    <input type="password" id="pw" placeholder="Parolayı gir">
-    <br><br>
-    <button onclick="check()">Bağlan</button>
-  </div>
-  <script>
-    const secret = "DockerEntry123!";
-    function check() {
-      if (document.getElementById("pw").value === secret) {
-        window.location.href = "/vnc.html?autoconnect=true&clipboard=true";
-      } else {
-        alert("Yanlış parola!");
-      }
-    }
-  </script>
+<h2>Uzak Masaüstü Parolası</h2>
+<input type="password" id="pw" placeholder="Parolayı gir"><br>
+<button onclick="check()">Bağlan</button>
+<script>
+ const secret = "DockerEntry123!";
+ function check(){ 
+   if(document.getElementById("pw").value === secret)
+     window.location.href = "/vnc.html?autoconnect=true&clipboard=true";
+   else alert("Yanlış parola!");
+ }
+</script>
 </body>
 </html>
