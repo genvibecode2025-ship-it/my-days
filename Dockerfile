@@ -1,11 +1,11 @@
-# ---- Temel İmaj ----
+# ---- Base Image ----
 FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-###########################################
-# 1) Gerekli Paketleri Kur
-###########################################
+##########################################
+# 1) OS Paketleri
+##########################################
 RUN apt update -y && \
     apt install --no-install-recommends -y \
         xfce4 xfce4-goodies \
@@ -18,51 +18,48 @@ RUN apt update -y && \
         wget curl vim net-tools git tzdata && \
     apt clean
 
-###########################################
-# 2) Kullanıcı Oluştur
-###########################################
+##########################################
+# 2) Kullanıcı
+##########################################
 RUN useradd -m -s /bin/bash user && \
     echo "user:StrongPass2026!" | chpasswd && \
     usermod -aG sudo user
 
-###########################################
-# 3) VNC Parola Ayarla (x11vnc)
-###########################################
+##########################################
+# 3) VNC Parolası
+##########################################
 RUN mkdir -p /home/user/.vnc && \
     x11vnc -storepasswd VNCpass123! /home/user/.vnc/passwd && \
     chmod 600 /home/user/.vnc/passwd && \
     chown -R user:user /home/user/.vnc
 
-###########################################
+##########################################
 # 4) Xauthority
-###########################################
+##########################################
 RUN touch /home/user/.Xauthority && \
     chown user:user /home/user/.Xauthority
 
-###########################################
-# 5) Portlar
-###########################################
-# noVNC / HTTP port
+##########################################
+# 5) Parola Girişi
+##########################################
+COPY index.html /usr/share/novnc/custom/index.html
+
+##########################################
+# 6) Portlar
+##########################################
 EXPOSE 6080
-# VNC display port
 EXPOSE 5901
 
-###########################################
-# 6) Başlatma Komutu
-###########################################
+##########################################
+# 7) Başlatma
+##########################################
 CMD bash -c "\
-    mkdir -p /home/user/.vnc && \
-    chown user:user /home/user/.vnc && \
-    \
-    # VNC server başlat
-    sudo -u user vncserver :1 -geometry 1280x800 -SecurityTypes VncAuth && \
-    \
-    # Self-signed SSL sertifikası üret
-    openssl req -new -subj \"/C=US/ST=State/L=City/O=Org/CN=localhost\" -x509 -days 365 -nodes \
+    # VNC Server
+    sudo -u user vncserver :1 -geometry 1366x768 -SecurityTypes VncAuth && \
+    sleep 4 && \
+    # SSL Sertifikası (self-signed)
+    openssl req -new -subj \"/C=US/ST=State/L=City/O=Org/CN=localhost\" \
+        -x509 -days 365 -nodes \
         -out /tmp/self.pem -keyout /tmp/self.pem && \
-    \
-    # noVNC websockify (Render'in $PORT'u)
-    websockify --web=/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901 & \
-    \
-    # Keep alive
-    tail -f /dev/null"
+    # noVNC ile WebSocket Proxy
+    websockify --web=/usr/share/novnc/custom,/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901"
