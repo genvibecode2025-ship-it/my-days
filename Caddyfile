@@ -1,15 +1,11 @@
 yourdomain.com {
-    # Caddy otomatik HTTPS alır
     tls youremail@example.com
 
-    # Önbellek HTTP → HTTPS
-    encode gzip zstd
+    encode gzip
 
-    # Static site: parola + novnc UI
     root * /usr/share/novnc/custom
     file_server
 
-    # WebSocket /Websockify proxy (noVNC)
     @vnc path /websockify*
     reverse_proxy @vnc localhost:5901 {
         transport http {
@@ -17,8 +13,7 @@ yourdomain.com {
         }
     }
 
-    # noVNC UI fallback
-    route {
+    handle {
         try_files {path} /vnc.html
         file_server
     }
