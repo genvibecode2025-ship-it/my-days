@@ -3,7 +3,9 @@ FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install desktop environment + VNC + noVNC + websockify + basics
+##########################################
+# 1) Masaüstü + VNC + noVNC + Firefox
+##########################################
 RUN apt update -y && \
     apt install --no-install-recommends -y \
         xfce4 xfce4-goodies \
@@ -11,39 +13,43 @@ RUN apt update -y && \
         novnc websockify \
         sudo xterm \
         dbus-x11 x11-utils x11-xserver-utils x11-apps \
-        software-properties-common \
         vim net-tools curl wget git tzdata && \
     apt clean
 
-# Add Firefox PPA
-RUN add-apt-repository ppa:mozillateam/ppa -y && \
-    echo 'Package: *' >> /etc/apt/preferences.d/mozilla-firefox && \
-    echo 'Pin: release o=LP-PPA-mozillateam' >> /etc/apt/preferences.d/mozilla-firefox && \
-    echo 'Pin-Priority: 1001' >> /etc/apt/preferences.d/mozilla-firefox && \
-    echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:jammy";' | tee /etc/apt/apt.conf.d/51unattended-upgrades-firefox && \
-    apt update -y && \
-    apt install -y firefox && \
-    apt clean
+# Firefox (Ubuntu resmi deposundan)
+RUN apt update -y && apt install -y firefox && apt clean
 
-# Touch .Xauthority so no errors
+##########################################
+# 2) Root parolası
+##########################################
+RUN echo "root:RootPass123!" | chpasswd
+
+##########################################
+# 3) Xauthority
+##########################################
 RUN touch /root/.Xauthority
 
-# Expose desktop & web ports
+##########################################
+# 4) Portlar
+##########################################
+# VNC port
 EXPOSE 5901
+# noVNC/websockify (Render bu PORT'u $PORT olarak ayarlar)
 EXPOSE 6080
-# Important: Render / Railway will map $PORT to external HTTP port
 
-# Start VNC + noVNC via websockify on $PORT
+##########################################
+# 5) Start komutu
+##########################################
 CMD bash -c "\
-    # Start VNC server :1 on port 5901
     mkdir -p /root/.vnc && \
+    # VNC server aç
     vncserver :1 -geometry 1280x800 -SecurityTypes None --I-KNOW-THIS-IS-INSECURE && \
     \
-    # Generate self-signed cert for WebSockets
+    # Self-signed sertifika oluştur
     openssl req -new -subj \"/C=US/ST=Denial/L=Nowhere/O=Dis/CN=localhost\" -x509 -days 365 -nodes -out /tmp/self.pem -keyout /tmp/self.pem && \
     \
-    # Start websockify/noVNC on Render PORT
+    # noVNC / websockify
     websockify --web=/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901 & \
     \
-    # Keep container running
+    # keep alive
     tail -f /dev/null"
