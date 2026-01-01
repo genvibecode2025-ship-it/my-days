@@ -1,10 +1,10 @@
-# ---- Base Image ----
+# Temel imaj
 FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 ##########################################
-# 1) OS Paketleri
+# 1) Paketler
 ##########################################
 RUN apt update -y && \
     apt install --no-install-recommends -y \
@@ -34,7 +34,7 @@ RUN mkdir -p /home/user/.vnc && \
     chown -R user:user /home/user/.vnc
 
 ##########################################
-# 4) Xauthority
+# 4) .Xauthority
 ##########################################
 RUN touch /home/user/.Xauthority && \
     chown user:user /home/user/.Xauthority
@@ -54,12 +54,17 @@ EXPOSE 5901
 # 7) Başlatma
 ##########################################
 CMD bash -c "\
-    # VNC Server
+    # Eski X11 socketlerini temizle
+    rm -f /tmp/.X1-lock /tmp/.X11-unix/X1 && \
+    \
+    # VNC serveri aç
     sudo -u user vncserver :1 -geometry 1366x768 -SecurityTypes VncAuth && \
     sleep 4 && \
-    # SSL Sertifikası (self-signed)
+    \
+    # Self-signed SSL sertifikası
     openssl req -new -subj \"/C=US/ST=State/L=City/O=Org/CN=localhost\" \
         -x509 -days 365 -nodes \
         -out /tmp/self.pem -keyout /tmp/self.pem && \
-    # noVNC ile WebSocket Proxy
-    websockify --web=/usr/share/novnc/custom,/usr/share/novnc/ --cert=/tmp/self.pem \$PORT localhost:5901"
+    \
+    # noVNC websockify
+    websockify --web=/usr/share/novnc/custom --cert=/tmp/self.pem \$PORT localhost:5901"
