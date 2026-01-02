@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: my-dev-environment
+    env: docker
+    plan: free
+    region: frankfurt
+    buildCommand: docker build -t myserver .
+    startCommand: ./entrypoint.sh
+    envVars:
+      - key: PORT
+        sync: false
+      - key: ROOT_PASSWORD
+        value: secret
+      - key: USER_PASSWORD
+        value: secret
+      - key: USER_NAME
+        value: user
