@@ -39,6 +39,21 @@ mkdir -p /root/.vnc
 echo "$ROOT_PASSWORD" | $VNCPASSWD -f > /root/.vnc/passwd
 chmod 600 /root/.vnc/passwd
 
+# Ensure xstartup exists at runtime (Dockerfile declares VOLUME /root, which can hide baked files).
+cat > /root/.vnc/xstartup <<'EOF'
+#!/bin/bash
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+
+# Some desktop components expect XDG_RUNTIME_DIR to exist.
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/tmp/runtime-root}
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+exec startxfce4
+EOF
+chmod +x /root/.vnc/xstartup
+
 # Set VNC password for user
 mkdir -p /home/$USER_NAME/.vnc
 echo "$USER_PASSWORD" | $VNCPASSWD -f > /home/$USER_NAME/.vnc/passwd
