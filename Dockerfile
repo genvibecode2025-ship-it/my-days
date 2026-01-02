@@ -43,6 +43,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-liberation \
     xdg-utils \
     openssh-server \
+    nginx \
+    gettext-base \
     && locale-gen en_US.UTF-8 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -59,6 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfce4-goodies \
     tigervnc-standalone-server \
     tigervnc-common \
+    tigervnc-tools \
     novnc \
     websockify \
     dbus-x11 \
@@ -122,6 +125,9 @@ RUN mkdir -p /home/$USER_NAME/.vnc && \
     echo "#!/bin/bash\nxrdb \$HOME/.Xresources\nstartxfce4 &" > /home/$USER_NAME/.vnc/xstartup && \
     chmod +x /home/$USER_NAME/.vnc/xstartup && \
     chown -R $USER_NAME:$USER_NAME /home/$USER_NAME/.vnc
+
+# Nginx Template
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
