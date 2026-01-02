@@ -58,6 +58,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfce4 \
     xfce4-goodies \
     tigervnc-standalone-server \
+    tigervnc-common \
     novnc \
     websockify \
     dbus-x11 \
