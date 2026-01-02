@@ -1,0 +1,49 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    
+    # Map for WebSocket support
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    server {
+        listen ${PORT};
+        server_name localhost;
+
+        # 1. Main Root -> Code-Server
+        location / {
+            proxy_pass http://127.0.0.1:8080/;
+            proxy_set_header Host $host;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Accept-Encoding gzip;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # 2. VNC (via separate path /vnc/)
+        # Important: noVNC expects to find files at root usually, so we need careful rewriting
+        # OR we rely on Code-Server proxy which is safer.
+        # Let's add a location for explicit noVNC just in case.
+        location /vnc/ {
+            proxy_pass http://127.0.0.1:6080/;
+            proxy_set_header Host $host;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+        
+        # Websockify path for VNC
+        location /websockify {
+            proxy_pass http://127.0.0.1:6080/websockify;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+}
