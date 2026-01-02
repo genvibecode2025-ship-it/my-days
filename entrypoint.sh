@@ -14,6 +14,9 @@ echo "Render PORT is set to: $PORT"
 echo "root:$ROOT_PASSWORD" | chpasswd
 echo "$USER_NAME:$USER_PASSWORD" | chpasswd
 
+# Export PASSWORD for Code-Server (uses the ROOT_PASSWORD)
+export PASSWORD=$ROOT_PASSWORD
+
 # Set VNC password for root
 mkdir -p /root/.vnc
 echo "$ROOT_PASSWORD" | vncpasswd -f > /root/.vnc/passwd
