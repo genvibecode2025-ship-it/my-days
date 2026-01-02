@@ -60,5 +60,11 @@ fi
 export PORT
 envsubst '$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
+echo "Validating Nginx config..."
+/usr/sbin/nginx -t -c /etc/nginx/nginx.conf
+
+echo "Starting VNC server..."
+/usr/bin/vncserver :1 -geometry 1920x1080 -depth 24 -localhost yes
+
 echo "Starting Supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
