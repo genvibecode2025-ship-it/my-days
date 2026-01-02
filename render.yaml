@@ -5,7 +5,7 @@ services:
     plan: free
     region: frankfurt
     buildCommand: docker build -t myserver .
-    startCommand: ./entrypoint.sh
+    startCommand: /usr/local/bin/entrypoint.sh
     envVars:
       - key: PORT
         sync: false
