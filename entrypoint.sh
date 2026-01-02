@@ -66,6 +66,14 @@ envsubst '$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 echo "Validating Nginx config..."
 /usr/sbin/nginx -t -c /etc/nginx/nginx.conf
 
+# Avoid leaking Render's PORT to code-server.
+# Nginx is the only public entrypoint and already binds to $PORT.
+unset PORT
+
+# Ensure code-server doesn't keep a stale bind-addr in its config.
+mkdir -p /root/.config/code-server
+rm -f /root/.config/code-server/config.yaml
+
 echo "Starting VNC server..."
 /usr/bin/vncserver :1 -geometry 1920x1080 -depth 24 -localhost yes
 
