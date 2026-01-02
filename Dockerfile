@@ -117,12 +117,12 @@ USER root
 
 # VNC Config for Root
 RUN mkdir -p /root/.vnc && \
-    echo "#!/bin/bash\nxrdb \$HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && \
+    echo "#!/bin/bash\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\n[ -r \"\$HOME/.Xresources\" ] && xrdb \"\$HOME/.Xresources\"\nexec dbus-launch --exit-with-session startxfce4" > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
 
 # VNC Config for Normal User (Optional, if they use VNC)
 RUN mkdir -p /home/$USER_NAME/.vnc && \
-    echo "#!/bin/bash\nxrdb \$HOME/.Xresources\nstartxfce4 &" > /home/$USER_NAME/.vnc/xstartup && \
+    echo "#!/bin/bash\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\n[ -r \"\$HOME/.Xresources\" ] && xrdb \"\$HOME/.Xresources\"\nexec dbus-launch --exit-with-session startxfce4" > /home/$USER_NAME/.vnc/xstartup && \
     chmod +x /home/$USER_NAME/.vnc/xstartup && \
     chown -R $USER_NAME:$USER_NAME /home/$USER_NAME/.vnc
 
