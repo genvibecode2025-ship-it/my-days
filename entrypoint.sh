@@ -17,14 +17,28 @@ echo "$USER_NAME:$USER_PASSWORD" | chpasswd
 # Export PASSWORD for Code-Server (uses the ROOT_PASSWORD)
 export PASSWORD=$ROOT_PASSWORD
 
+# Find vncpasswd command
+VNCPASSWD="vncpasswd"
+if ! command -v vncpasswd &> /dev/null; then
+    echo "vncpasswd command not found in PATH, searching..."
+    if [ -f /usr/bin/vncpasswd ]; then
+        VNCPASSWD="/usr/bin/vncpasswd"
+    elif [ -f /usr/bin/tigervncpasswd ]; then
+        VNCPASSWD="/usr/bin/tigervncpasswd"
+    else
+        echo "WARNING: vncpasswd not found. VNC setup might fail."
+    fi
+fi
+echo "Using vncpasswd command: $VNCPASSWD"
+
 # Set VNC password for root
 mkdir -p /root/.vnc
-echo "$ROOT_PASSWORD" | vncpasswd -f > /root/.vnc/passwd
+echo "$ROOT_PASSWORD" | $VNCPASSWD -f > /root/.vnc/passwd
 chmod 600 /root/.vnc/passwd
 
 # Set VNC password for user
 mkdir -p /home/$USER_NAME/.vnc
-echo "$USER_PASSWORD" | vncpasswd -f > /home/$USER_NAME/.vnc/passwd
+echo "$USER_PASSWORD" | $VNCPASSWD -f > /home/$USER_NAME/.vnc/passwd
 chmod 600 /home/$USER_NAME/.vnc/passwd
 chown -R $USER_NAME:$USER_NAME /home/$USER_NAME/.vnc
 
