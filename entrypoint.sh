@@ -17,6 +17,9 @@ echo "$USER_NAME:$USER_PASSWORD" | chpasswd
 # Export PASSWORD for Code-Server (uses the ROOT_PASSWORD)
 export PASSWORD=$ROOT_PASSWORD
 
+# Ensure code-server dirs exist (avoids failures on fresh volumes)
+mkdir -p /root/.local/share/code-server /root/.local/share/code-server/extensions
+
 # Find vncpasswd command
 VNCPASSWD="vncpasswd"
 if ! command -v vncpasswd &> /dev/null; then
