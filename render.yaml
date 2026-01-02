@@ -1,14 +1,13 @@
 services:
   - type: web
     name: my-dev-environment
-    env: docker
+    runtime: docker
     plan: free
     region: frankfurt
-    buildCommand: docker build -t myserver .
-    startCommand: /usr/local/bin/entrypoint.sh
+    healthCheckPath: /
     envVars:
       - key: PORT
-        sync: false
+        value: 10000
       - key: ROOT_PASSWORD
         value: secret
       - key: USER_PASSWORD
