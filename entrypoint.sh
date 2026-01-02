@@ -5,8 +5,10 @@ set -e
 ROOT_PASSWORD=${ROOT_PASSWORD:-"secret"}
 USER_PASSWORD=${USER_PASSWORD:-"secret"}
 USER_NAME=${USER_NAME:-"user"}
+PORT=${PORT:-10000}
 
 echo "Setting up environment..."
+echo "Render PORT is set to: $PORT"
 
 # Set passwords
 echo "root:$ROOT_PASSWORD" | chpasswd
@@ -36,6 +38,10 @@ if [ ! -f /etc/ssl/certs/novnc.pem ]; then
         -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=localhost"
     chmod 644 /etc/ssl/certs/novnc.pem
 fi
+
+# Generate Nginx Config from Template
+export PORT
+envsubst '$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 echo "Starting Supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
